@@ -6,21 +6,50 @@
         <h1>
             Soil moisture (water content): <span id="moisture_val">0</span>%
         </h1>
+        <h1>
+            Current error: <span id="error">0</span>
+        </h1>
 
         <button onclick="pidOnOffToggle()" id="onoffbtn">Turn on PID irrigation system</button>
-        <button onclick="addDrop()">Test water fill</button>
+        <button onclick="addWater(1)">Manually add water</button>
+        <button onclick="addWater(-1)">Manually remove water</button>
+        <br><br>
 
         <form action="">
             <label for="desired">Desired moisture:</label><br>
-            <input type="text" id="desired" name="desired"><br>
+            <input type="text" id="desired" name="desired">
+          </form> 
+        <br>
+
+        <form action="">
+            <label for="desired">Kp:</label><br>
+            <input type="text" id="desired" name="desired">
+          </form> 
+        <br>
+
+        <form action="">
+            <label for="desired">Ki:</label><br>
+            <input type="text" id="desired" name="desired">
+          </form> 
+
+        <br>
+
+        <form action="">
+            <label for="desired">Kd:</label><br>
+            <input type="text" id="desired" name="desired">
           </form> 
         <button onclick="setDesired()">Set</button>
+        <br>
 
         <!--
         <iframe src="garden.html" height="200" width="300" title="PID Garden Iframe"></iframe>-->
 
-        <canvas id="myCanvas" width="1080" height="2280" style="border:1px solid #d3d3d3;">
+        <canvas id="myCanvas" width="1080" height="1080" style="border:1px solid #d3d3d3;">
             Your browser does not support the HTML5 canvas tag.</canvas>
+
+        <canvas width=500 height=50></canvas><br>
+
+        <div></div>
     </body>
     <script src="home.js"></script>
 </html>
