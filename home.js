@@ -1,9 +1,14 @@
-var c = document.getElementById("myCanvas");
+//get canvas on which to draw garden
+var c = document.getElementById("gardenCanvas");
 var ctx = c.getContext("2d");
 
+//no image smoothing
 ctx.imageSmoothingEnabled = ctx.mozImageSmoothingEnabled = ctx.webkitImageSmoothingEnabled = false;
+
+//set font for canvas
 ctx.font = "50px sans-serif";
 
+//start new path, empty list of subpaths
 ctx.beginPath();
 
 //current fill point of garden, used for coloring
@@ -19,10 +24,14 @@ var gardenTopLeftY = 250;
 var gardenBottomRtX = 900;
 var gardenBottomRtY = 900;
 
-//**** PID constants DEFINED HERE ****
-var Kp = 0.12,
-Ki = 0.00001;
-Kd = 0.8;
+//the PID controller
+var ctrl = null;
+
+//whether we should reset integral to 0 when error approaches 0
+var SHOULD_RESET_INTEGRAL = true;
+
+//+- range of error at which integral should be reset to 0
+var INTEGRAL_RESET_THRESHOLD = 1;
 
 var blue = "#0000BB";
 var white = "#FFFFFF";
@@ -36,7 +45,7 @@ var onOffBtn = document.getElementById("onoffbtn");
 var currError = document.getElementById("error");
 
 //desired moisture level and actual moisture level
-var desired = 0, actual = 0;
+var desiredMoisture = 0, actualMoisture = 0;
 
 var runPid = false;
 
@@ -67,7 +76,7 @@ class PIDCtrl
     console.log("Abs error is ", Math.abs(error));
 
     //reset the integral component when error reaches low point, to avoid overshooting
-    if (Math.abs(error) < 3) {
+    if (SHOULD_RESET_INTEGRAL && (Math.abs(error) < INTEGRAL_RESET_THRESHOLD)) {
       console.log("RESET INTEGRAL");
       this.integError = 0;
     }
@@ -103,16 +112,13 @@ class PIDCtrl
   }
 }
 
-let ctrl = new PIDCtrl(Kp, Ki, Kd);
-
-
 //draw rectangle symbolizing the garden : x, y, width, height
 ctx.rect(gardenTopLeftX, gardenTopLeftY, gardenBottomRtX - gardenTopLeftX, gardenBottomRtY - gardenTopLeftY);
 
 //draw some text in the garden
 ctx.fillText("My garden", 400, 200);
 
-//draw to screen
+//strokes (outlines) current or given path with the current stroke style
 ctx.stroke();
 
 //get a random int including [0...max-1] in range
@@ -120,7 +126,55 @@ function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
+//draw the water
+function drawWater(finalWaterAmtToAdd) {
+    //clear subpath list, start new path
+    ctx.beginPath();
+
+    //clear garden
+    ctx.clearRect(gardenTopLeftX, gardenTopLeftY, gardenWidth, gardenHeight);
+
+    //redraw garden outline
+    ctx.rect(gardenTopLeftX, gardenTopLeftY, gardenBottomRtX - gardenTopLeftX, gardenBottomRtY - gardenTopLeftY);
+
+    //clip to garden
+    ctx.clip();
+
+    //clear subpath list again, start new path
+    ctx.beginPath();
+
+    fillY = gardenBottomRtY - (currentFillPt + finalWaterAmtToAdd);
+
+    //go to left edge of canvas, appropriate y coord
+    ctx.moveTo(gardenTopLeftX, fillY);
+
+    //draw wavy top edge
+    for (var x = gardenTopLeftX; x < gardenBottomRtX - 8; x += 20) {
+        //adds quadratic Bézier curve to current sub-path, requires two points: a control pt and end pt. 
+        //Starting pt is the latest point in the current path, which can be changed using moveTo() before creating curve
+        ctx.quadraticCurveTo(x + 10,  //control pt x coord
+          fillY + 15,
+           x + 20, 
+           fillY);
+    }
+
+    //line from top right to bottom rt
+    ctx.lineTo(gardenBottomRtX, gardenBottomRtY);
+
+    //line from bottom rt to bottom left
+    ctx.lineTo(gardenTopLeftX, gardenBottomRtY);
+
+    //close the path and fill with blue
+    ctx.closePath();
+    ctx.fillStyle = drawingColor;
+    ctx.fill();
+}
+
+//add (or subtract) some amount of water from the garden
 function addWater(amt) {
+    //start new path, empty list of subpaths
+    ctx.beginPath();
+
     console.log("addWater() called");
 
     if (amt == 0) {
@@ -137,39 +191,31 @@ function addWater(amt) {
     //calculate final water amt to add to the system, factoring in the random error
     finalWaterAmtToAdd = (sign == 0) ? amt + randomWaterError : amt - randomWaterError;
 
-    //if need to add water to system
-    if (finalWaterAmtToAdd > 0) {
-      ctx.fillStyle = blue;
-      ctx.fillRect(gardenTopLeftX, gardenBottomRtY - (currentFillPt + finalWaterAmtToAdd), gardenWidth, finalWaterAmtToAdd);
-    }
-    else {
-      ctx.fillStyle = white;
-      ctx.fillRect(gardenTopLeftX, gardenBottomRtY - currentFillPt, gardenWidth, finalWaterAmtToAdd);
-    }
+    //draw the water in the garden
+    drawWater(finalWaterAmtToAdd);
   
     currentFillPt += finalWaterAmtToAdd;
     console.log("After addWater(), new currentFillPt is ", currentFillPt, ", ...updating HTML");
 
     //calculate new soil moisture percentage after adding water
     let newMoistureVal = currentFillPt / gardenHeight * 100;
-    actual = newMoistureVal;
+    actualMoisture = newMoistureVal;
 
     //set moisture val text to new value
     moistureVal.innerHTML = newMoistureVal;
 }
 
 function setDesired() {
-    //get the desired value entered in input box
-    desired = document.getElementById("desired").value;
+    //get the desired values entered in input boxes
+    desiredMoisture = document.getElementById("desiredMoisture").value;
+    desiredP = document.getElementById("desiredP").value;
+    desiredI = document.getElementById("desiredI").value;
+    desiredD = document.getElementById("desiredD").value;
 
-    console.log("Desired is ", desired);
+    console.log("Desired moist, p, i, d are", desiredMoisture, "%, ", desiredP, ",", desiredI, ",", desiredD);
 
-    //start with fresh previous error and integral
-    ctrl.ResetCtrl();
-}
-
-class TestClass {
-    
+    //generate new PID controller with desired constants
+    ctrl = new PIDCtrl(desiredP, desiredI, desiredD);
 }
 
 //sleep (blocking) for number of milliseconds
@@ -178,15 +224,14 @@ function sleep(milliseconds) {
     const date = Date.now();
     let currentDate = null;
     do {
-        //console.log("Sleeping");
-      currentDate = Date.now();
+        currentDate = Date.now();
     } while (currentDate - date < milliseconds);
 }
 
 //the control loop, which runs at frequency specified by pidFreq
 function pidLoop() {
     //check if the PID has been turned on by the user
-    if (runPid) {
+    if (runPid && (ctrl != null)) {
       console.log("Running PID");
 
       console.log("Integral component is", ctrl.ComponentI());
@@ -196,8 +241,9 @@ function pidLoop() {
       console.log("Time elapsed was", timeElapsed);
 
       //update PID controller, then add some water to the garden, basing amt of water on controller output
-      addWater(ctrl.Update(desired - actual, timeElapsed));
+      addWater(ctrl.Update(desiredMoisture - actualMoisture, timeElapsed));
 
+      //get current timestamp to use for next loop iteration
       prevTime = Date.now();
     }
 }
@@ -211,21 +257,24 @@ function pidOnOffToggle() {
         onOffBtn.innerHTML = "Turn off PID irrigation system";
     }
 
+    //flip runPid bool
     runPid = !runPid;
 }
 
-function setProcessVars(p, i, d, mass, damping, maxf)
+function setProcessVars(p, i, d)
 {
   ctrl.Kp = p;
   ctrl.Ki = i;
   ctrl.Kd = d; 
   
+  /*
   car.mass = mass;
   car.damping = 1.0 - damping;
-  motorLimit = maxf;
+  motorLimit = maxf;*/
 }
 
-var ctx2 = document.querySelector("canvas").getContext("2d"),
+//second canvas
+var ctx2 = document.getElementById("interpCanvas").getContext("2d"),
 x = 3.1, 
 dx = 0.1;
 
@@ -254,7 +303,7 @@ ctx2.font = "14px sans-serif";
   info(x);
 
   //display length
-  document.querySelector("div").innerHTML = "length: " + x.toFixed(2);
+  document.getElementById("interpLength").innerHTML = "Length: " + x.toFixed(2);
   
   //recursively repeat this fxn infinitely
   setTimeout(loop, 160)
@@ -293,9 +342,102 @@ function info(x) {
   ctx2.fillRect(x * 50 - 1, 32, 2, 7);
 }
 
-
+//get initial timestamp
 var prevTime = Date.now();
+
+//set the PID loop to run every pidFreq ms
 setInterval(pidLoop, pidFreq);
+
+
+var fillTestCanvas = document.getElementById("fillTestCanvas");
+var ctx3 = fillTestCanvas.getContext("2d");
+var cw = fillTestCanvas.width;
+var ch = fillTestCanvas.height;
+ctx3.lineCap = "round";
+
+//set y to height of canvas - 10
+var y = ch - 10;
+var drawingColor = "#0092f9";
+animate();
+
+function animate() {
+    //stop when y hits 0
+    if (y > 0) {
+        //only run animate() again if there's room left in the droplet
+        requestAnimationFrame(animate);
+    }
+
+    //clear entire canvas
+    ctx3.clearRect(0, 0, cw, ch);
+
+    //Saves current drawing style state using stack so you can revert any change you make to it using restore().
+    ctx3.save();
+
+    //draw the droplet outline
+    drawContainer(0, null, null);
+    drawContainer(15, drawingColor, null);
+    drawContainer(7, "white", "white");
+
+    ctx3.save();
+
+    //Creates clipping path from current sub-paths. Everything drawn after clip() is called appears inside clipping path only
+    ctx3.clip();
+
+    //draw the liquid inside/clipped to droplet outline
+    drawLiquid();
+
+    //Restores drawing style state to last element on 'state stack' saved by save()
+    ctx3.restore();
+
+    //restore to first state
+    ctx3.restore();
+
+    //up one pixel
+    y--;
+}
+
+function drawLiquid() {
+    ctx3.beginPath();
+
+    //go to left edge of canvas, appropriate y coord
+    ctx3.moveTo(0, y);
+
+    //draw wavy top edge
+    for (var x = 0; x < cw; x += 20) {
+        ctx3.quadraticCurveTo(x + 10, y + 15, x + 20, y);
+    }
+
+    //line from top right to bottom rt
+    ctx3.lineTo(cw, ch);
+
+    //line from bottom rt to bottom left
+    ctx3.lineTo(0, ch);
+
+    //close the path and fill with blue
+    ctx3.closePath();
+    ctx3.fillStyle = drawingColor;
+    ctx3.fill();
+}
+
+//draw outline of water drop
+function drawContainer(linewidth, strokestyle, fillstyle) {
+    ctx3.beginPath();
+    ctx3.moveTo(109, 15);
+    ctx3.bezierCurveTo(121, 36, 133, 57, 144, 78);
+    ctx3.bezierCurveTo(160, 109, 176, 141, 188, 175);
+    ctx3.bezierCurveTo(206, 226, 174, 272, 133, 284);
+    ctx3.bezierCurveTo(79, 300, 24, 259, 25, 202);
+    ctx3.bezierCurveTo(25, 188, 30, 174, 35, 161);
+    ctx3.bezierCurveTo(53, 115, 76, 73, 100, 31);
+    ctx3.bezierCurveTo(103, 26, 106, 21, 109, 15);
+    ctx3.lineWidth = linewidth;
+    ctx3.strokeStyle = strokestyle;
+    ctx3.stroke();
+    if (fillstyle) {
+        ctx3.fillStyle = fillstyle;
+        ctx3.fill();
+    }
+}
 
 
 

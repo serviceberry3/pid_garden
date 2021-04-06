@@ -1,0 +1,15 @@
+.flex-container {
+    display: flex;
+}
+
+.curr-data {
+    font-size: 24px;
+}
+
+.inputs {
+    padding-left: 10px;
+}
+
+.droplet-canvas {
+    border:1px solid red;
+}
