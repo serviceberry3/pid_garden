@@ -53,6 +53,76 @@ var desiredMoisture = 0, actualMoisture = 0;
 
 var runPid = false;
 
+var data = '<!--svg is actually a **DOCUMENT**, similar to iframe-->' +
+'<svg xmlns="http://www.w3.org/2000/svg" '+
+'viewBox="0 0 7000 200">'+
+    '<defs>'+
+        '<style>.cls-1{fill:#5fb157;}.cls-2{fill:none;stroke:#221f20;stroke-miterlimit:10;}'+
+        '</style>'+
+    '</defs>'+
+    '<g id="Calque_2" data-name="Calque 2">'+
+    '<g id="Calque_1-2" data-name="Calque 1">'+
+            '<path class="cls-1" d="M196.19,164.82v-95A259.28,259.28,0,0,1,206.61,25.4c1.84-5.6,4.06-11.4,8.55-15.23,3.67-3.13,8.45-4.58,'+
+            '13.12-5.81C240.12,1.24,252.62-1,264.57,1.71S287.83,13,290.43,25a32,32,0,0,0-17.9,10.35c6.92,5.09,14,10.59,17.69,18.35S293,'+
+            '72.12,285.86,77c-5.93,4.05-14,2.86-20.68.13s-12.79-6.84-19.81-8.39c-6.55-1.45-15.79,2.33-14.27,8.86,1.66,7.06,14.69,8.9,'+
+            '13,16-7.43-2.18-15.26,3.16-19.11,9.87s-4.89,14.61-7.06,22c-3.9,13.34-11.44,25.26-18.93,37a33.37,33.37,0,0,1-7.57,13.31Q193.92,170.29,196.19,164.82Z"/>'+
+            '<path class="cls-1" d="M159.53,83.94l-2,0c-.07-13.39-2.09-27.61-12.77-35-8.32-5.76-20-5.18-28.82-.28s-15.2,13.46-19.43,22.66c-4.6,10-7,'+
+            '21.24-5.49,32.16,1.38,10,5.94,19.55,5.35,29.59s-10,20.73-19.4,17.2C69.43,147.46,67.29,138,66.25,130,52.67,128,42.14,144.32,28.4,144.15S7.23,'+
+            '128.45,3,115.42C1,109.51-.87,102.86,1.86,97.27c1.72-3.52,5-6,8.22-8.17a170.69,170.69,0,0,1,49-23,32.46,32.46,0,0,0-27-16.68c24.35-14.46,'+
+            '56.16-8.42,82-19.91,16.19-7.19,31-21.34,48.57-19.25,12.85,1.53,23.28,12,28.21,23.93s5.27,25.27,4.9,38.2c.11-.85.23-1.71.36-2.56v95q-2.28,'+
+            '5.48-4.72,10.88l-.13.14a45.25,45.25,0,0,0-3.81,4.15,13.69,13.69,0,0,0-2.56,8.64h-.41a13.17,13.17,0,0,1-3.6-6.72h.52a20.27,20.27,0,0,0-3.83-9.11l2.67-.58a16.43,'+
+            '16.43,0,0,1-1-9.29h-.05a79.88,79.88,0,0,0-10.1-57.52C164.94,98.64,159.53,91.89,159.53,83.94Z"/>'+
+            '<path class="cls-1" d="M179.22,162.92h.05a16.43,16.43,0,0,0,1,9.29l-2.67.58c-4.59-6.47-12-11.77-15.52-18.85,3.15-8.61-3.19-19.52-12.35-20.76-10.57-1.44-19.21,'+
+            '7.77-28.91,12.21-6.2,2.83-15.29,2.68-17.94-3.6-2.12-5,1.48-10.79,6.12-13.6s10.17-3.71,15.17-5.81,9.89-6.21,'+
+            '10.12-11.63c-4.2-1.75-8.54-3.6-11.62-6.94s-4.57-8.63-2.22-12.52c1.56-2.59,4.46-4.07,7.33-5a32.58,32.58,0,0,1,27.89,4l1.75-.44c.05-1.94.08-3.92.06-5.92l2,'+
+            '0c0,8,5.41,14.7,9.59,21.46A79.88,79.88,0,0,1,179.22,162.92Z"/>'+
+            '<path class="cls-2" d="M161.78,154.83c.13-.29.25-.58.35-.88,'+
+            '3.15-8.61-3.19-19.52-12.35-20.76-10.57-1.44-19.21,7.77-28.91,12.21-6.2,2.83-15.29,2.68-17.94-3.6-2.12-5,1.48-10.79,6.12-13.6s10.17-3.71,15.17-5.81,'+
+            '9.89-6.21,10.12-11.63c-4.2-1.75-8.54-3.6-11.62-6.94s-4.57-8.63-2.22-12.52c1.56-2.59,4.46-4.07,7.33-5a32.58,32.58,0,0,1,27.89,4A25.52,25.52,0,0,1,157.94,92"/>'+
+            '<path class="cls-2" d="M157.47,89.88c.05-1.94.08-3.92.06-5.92-.07-13.39-2.09-27.61-12.77-35-8.32-5.76-20-5.18-28.82-.28s-15.2,13.46-19.43,'+
+            '22.66c-4.6,10-7,21.24-5.49,32.16,1.38,10,5.94,19.55,5.35,29.59s-10,20.73-19.4,17.2C69.43,147.46,67.29,138,66.25,130,52.67,128,42.14,144.32,28.4,'+
+            '144.15S7.23,128.45,3,115.42C1,109.51-.87,102.86,1.86,97.27c1.72-3.52,5-6,8.22-8.17a170.69,170.69,0,0,1,49-23,32.46,32.46,0,0,0-27-16.68c24.35-14.46,'+
+            '56.16-8.42,82-19.91,16.19-7.19,31-21.34,48.57-19.25,12.85,1.53,23.28,12,28.21,23.93s5.27,25.27,4.9,38.2c.11-.85.23-1.71.36-2.56A259.28,259.28,0,0,1,'+
+            '206.61,25.4c1.84-5.6,4.06-11.4,8.55-15.23,3.67-3.13,8.45-4.58,13.12-5.81C240.12,1.24,252.62-1,264.57,1.71S287.83,13,290.43,25a32,32,0,0,0-17.9,'+
+            '10.35c6.92,5.09,14,10.59,17.69,18.35S293,72.12,285.86,77c-5.93,4.05-14,2.86-20.68.13s-12.79-6.84-19.81-8.39c-6.55-1.45-15.79,2.33-14.27,8.86,1.66,'+
+            '7.06,14.69,8.9,13,16-7.43-2.18-15.26,3.16-19.11,9.87s-4.89,14.61-7.06,22c-3.9,13.34-11.44,25.26-18.93,37,0,.09-.11.18-.17.27"/>'+
+            '<path class="cls-2" d="M196.19,68.32v97.59"/>'+
+            '<path class="cls-2" d="M159.53,83.92v0c0,8,5.41,14.7,9.59,21.46a79.88,79.88,0,0,1,10.1,57.52c-.1.53-.22,1.06-.34,1.59"/>'+
+            '<path class="cls-2" d="M160.63,150a19.63,19.63,0,0,0,1.5,3.91c3.57,7.08,10.93,12.38,15.52,18.85a20.27,20.27,0,0,1,3.83,9.11"/>'+
+            '<path class="cls-2" d="M197.48,161.74c-.42,1-.85,2.06-1.29,3.08q-2.28,5.48-4.72,10.88-1.46,3.3-3,6.58"/>'+
+            '<path class="cls-2" d="M179.27,162.93a16.43, 16.43,0,0,0,1,9.29"/>'+
+            '<path class="cls-2" d="M199.12,162.12c0,.09-.05.18-.08.27a33.37,33.37,0,0,1-7.57,13.31l-.13.14a45.25,45.25,0,0,0-3.81,4.15,13.69,'+
+            '13.69,0,0,0-2.56,8.64,11.26,11.26,0,0,0,.24,2"/>'+
+            '<path class="cls-2" d="M180.87,181.41l.09.51a13.17,13.17,0,0,0,3.6,6.72"/>'+
+        '</g>'+
+    '</g>'+
+'</svg>';
+
+//get URL to the DOM. window represents the browser's window
+var DOMURL = window.URL || window.webkitURL || window;
+
+//create new Image
+var carrotTopImg = new Image();
+
+//create new Blob, a file-like obj of immutable, raw data; they can be read as text or binary data, or converted into ReadableStream 
+//so its methods can be used for processing the data. Can represent data that isn't necessarily in JS-native format. 
+var svg = new Blob([data], {type: 'image/svg+xml'});
+
+//create a URL for the svg file
+//creates DOMString containing URL representing svg. The URL lifetime is tied to the doc in window on which it was created. 
+//The new object URL represents the specified File object or Blob object
+var url = DOMURL.createObjectURL(svg);
+
+//A DOMString is a sequence of 16-bit unsigned ints, typically interpreted as UTF-16 code units. This corresponds exactly to JS primitive String type.
+//When a DOMString is provided to JS, it maps directly to corresponding String.
+//When a Web API accepts a DOMString, val provided will be stringified, using ToString abstract operation.
+
+carrotTopImg.src = 'img/carrot_top.png';
+
+//draw the garden once the image has loaded
+carrotTopImg.onload = drawGarden;
+
+
 class PIDCtrl
 {
   constructor(p, i, d)
@@ -121,7 +191,7 @@ function drawGarden() {
   ctx.fillStyle = black;
 
   //draw some text in the garden
-  ctx.fillText("My garden", 400, 200);
+  ctx.fillText("My garden", 400, 150);
 
   ctx.fillStyle = darkBrown;
 
@@ -140,7 +210,7 @@ function drawGarden() {
   currentX = 0;
   currentY = 0;
 
-  
+  //draw the carrot flesh
   for (i = 1; i < 14; i++) {
     //starts a new path by emptying the list of sub-paths. (creates new path)
     ctx.beginPath();
@@ -164,6 +234,19 @@ function drawGarden() {
     ctx.fill();
   }
 
+  currentX = 0;
+  currentY = 0;
+
+  //draw the tops of the carrots
+  for (i = 1; i < 14; i++) {
+    currentX = gardenTopLeftX + (50 * i) - 20;
+    currentY = gardenTopLeftY - 60;
+
+    //draw a carrot top
+    ctx.drawImage(carrotTopImg, currentX, currentY, 50, 50 * carrotTopImg.height / carrotTopImg.width);
+  }
+
+  
   //draw rectangle symbolizing the garden: x, y, width, height
   ctx.rect(gardenTopLeftX, gardenTopLeftY, gardenBottomRtX - gardenTopLeftX, gardenBottomRtY - gardenTopLeftY);
 
@@ -171,6 +254,7 @@ function drawGarden() {
   //Strokes are aligned to center of a path, so half of stroke is drawn on inner side, and half on the outer side.
   //Stroke is drawn using non-zero winding rule, which means path intersections will still get filled
   ctx.stroke();
+
 }
 
 //draw garden once on page load
