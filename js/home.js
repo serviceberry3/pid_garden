@@ -35,6 +35,10 @@ var INTEGRAL_RESET_THRESHOLD = 1;
 
 var blue = "#0000BB";
 var white = "#FFFFFF";
+var lightBrown = "#D2691E";
+var darkBrown = "#654321";
+var black = "#000000";
+var orange = "#FF4500";
 
 var gardenWidth = gardenBottomRtX - gardenTopLeftX;
 var gardenHeight = gardenBottomRtY - gardenTopLeftY;
@@ -112,14 +116,65 @@ class PIDCtrl
   }
 }
 
-//draw rectangle symbolizing the garden : x, y, width, height
-ctx.rect(gardenTopLeftX, gardenTopLeftY, gardenBottomRtX - gardenTopLeftX, gardenBottomRtY - gardenTopLeftY);
+function drawGarden() {
+  //black text
+  ctx.fillStyle = black;
 
-//draw some text in the garden
-ctx.fillText("My garden", 400, 200);
+  //draw some text in the garden
+  ctx.fillText("My garden", 400, 200);
 
-//strokes (outlines) current or given path with the current stroke style
-ctx.stroke();
+  ctx.fillStyle = darkBrown;
+
+  //draw garden details
+  ctx.fillRect(gardenTopLeftX, gardenTopLeftY - 20, gardenBottomRtX - gardenTopLeftX, 50);
+
+  //draw carrots
+  ctx.strokeStyle = black;
+  ctx.fillStyle = orange;
+
+  //ctx.moveTo(gardenTopLeftX, gardenTopLeftY - 20);
+
+  carrotWidth = 20;
+  carrotHeight = 50;
+
+  currentX = 0;
+  currentY = 0;
+
+  
+  for (i = 1; i < 14; i++) {
+    //starts a new path by emptying the list of sub-paths. (creates new path)
+    ctx.beginPath();
+
+    currentX = gardenTopLeftX + (50 * i);
+    currentY = gardenTopLeftY - 30;
+
+    //begins a new sub-path at the point specified by the given (x, y) coordinates
+    ctx.moveTo(currentX, currentY);
+
+    currentX = currentX + (carrotWidth / 2);
+    currentY = currentY + carrotHeight;
+    ctx.lineTo(currentX, currentY);
+
+    currentX = currentX + (carrotWidth / 2);
+    currentY = currentY - carrotHeight;
+    ctx.lineTo(currentX, currentY);
+
+    ctx.closePath();
+    ctx.stroke();
+    ctx.fill();
+  }
+
+  //draw rectangle symbolizing the garden: x, y, width, height
+  ctx.rect(gardenTopLeftX, gardenTopLeftY, gardenBottomRtX - gardenTopLeftX, gardenBottomRtY - gardenTopLeftY);
+
+  //strokes (outlines) current or given path with the current stroke style
+  //Strokes are aligned to center of a path, so half of stroke is drawn on inner side, and half on the outer side.
+  //Stroke is drawn using non-zero winding rule, which means path intersections will still get filled
+  ctx.stroke();
+}
+
+//draw garden once on page load
+drawGarden();
 
 //get a random int including [0...max-1] in range
 function getRandomInt(max) {
@@ -134,8 +189,8 @@ function drawWater(finalWaterAmtToAdd) {
     //clear garden
     ctx.clearRect(gardenTopLeftX, gardenTopLeftY, gardenWidth, gardenHeight);
 
-    //redraw garden outline
-    ctx.rect(gardenTopLeftX, gardenTopLeftY, gardenBottomRtX - gardenTopLeftX, gardenBottomRtY - gardenTopLeftY);
+    //redraw garden outline and details
+    drawGarden();
 
     //clip to garden
     ctx.clip();
@@ -154,7 +209,7 @@ function drawWater(finalWaterAmtToAdd) {
         //Starting pt is the latest point in the current path, which can be changed using moveTo() before creating curve
         ctx.quadraticCurveTo(x + 10,  //control pt x coord
           fillY + 15,
-           x + 20, 
+           x + 20,                    //end pt x coord
            fillY);
     }
 
@@ -164,7 +219,7 @@ function drawWater(finalWaterAmtToAdd) {
     //line from bottom rt to bottom left
     ctx.lineTo(gardenTopLeftX, gardenBottomRtY);
 
-    //close the path and fill with blue
+    //close the path (close the gap with straight line) and fill with blue
     ctx.closePath();
     ctx.fillStyle = drawingColor;
     ctx.fill();
@@ -177,6 +232,7 @@ function addWater(amt) {
 
     console.log("addWater() called");
 
+    //if amount is 0, return immediately
     if (amt == 0) {
       return;
     }
